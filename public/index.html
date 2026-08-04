@@ -842,6 +842,12 @@
 
   let items = [];
   let activeLetter = "ALL";
+  // Bumped every time a new auth attempt starts (initial check, sign-in,
+  // sign-up, sign-out). Any in-flight attempt whose epoch no longer matches
+  // the current one is stale and must not touch the UI \u2014 this is what
+  // prevents the "main page, then back to login, then main page again"
+  // flicker when two auth checks happen to overlap.
+  let authEpoch = 0;
   let searchTerm = "";
   let editingId = null;   // id currently being edited, null = adding new
   let pendingDeleteId = null;
@@ -953,6 +959,7 @@
         }
       } catch (e) {
         if (e instanceof AuthRequiredError) {
+          ++authEpoch;
           stopPolling();
           showAuthScreen();
         }
@@ -1358,16 +1365,28 @@
     }
   }
 
-  async function startApp() {
-    document.getElementById("authScreen").style.display = "none";
-    document.getElementById("appRoot").style.display = "block";
+  // Loads the list (which doubles as our "am I signed in?" check via the
+  // HttpOnly session cookie) and only switches the UI over to the main app
+  // once that's confirmed \u2014 never optimistically, so a failure never shows
+  // a flash of the main view before bouncing back to the sign-in screen.
+  // `myEpoch` lets a caller mark this attempt as "current"; if a newer
+  // attempt has started by the time this one finishes, its result is
+  // discarded instead of fighting the newer one for control of the screen.
+  async function startApp(myEpoch) {
+    let list;
     try {
-      items = await fetchItemsFromServer();
+      list = await fetchItemsFromServer();
     } catch (e) {
+      if (myEpoch !== undefined && myEpoch !== authEpoch) return;
       if (e instanceof AuthRequiredError) { showAuthScreen(); return; }
       showAuthScreen("Couldn't load the list \u2014 " + e.message);
       return;
     }
+    if (myEpoch !== undefined && myEpoch !== authEpoch) return;
+
+    items = list;
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("appRoot").style.display = "block";
     populateCategorySelect();
     render();
     startPolling();
@@ -1391,13 +1410,16 @@
     const password = document.getElementById("authPassword").value;
     const btn = document.getElementById("signInBtn");
     btn.disabled = true;
+    const myEpoch = ++authEpoch;
     try {
       await apiFetch("/api/auth/signin", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      await startApp();
+      if (myEpoch !== authEpoch) return;
+      await startApp(myEpoch);
     } catch (e) {
+      if (myEpoch !== authEpoch) return;
       showAuthScreen(e.message);
     } finally {
       btn.disabled = false;
@@ -1412,6 +1434,7 @@
 
     const btn = document.getElementById("signupSubmitBtn");
     btn.disabled = true;
+    const myEpoch = ++authEpoch;
     let result;
     try {
       result = await apiFetch("/api/auth/signup", {
@@ -1424,10 +1447,11 @@
       return;
     }
     btn.disabled = false;
+    if (myEpoch !== authEpoch) return;
 
     if (result.signedIn) {
       closeOverlay("signupOverlay");
-      await startApp();
+      await startApp(myEpoch);
       return;
     }
     closeOverlay("signupOverlay");
@@ -1435,6 +1459,7 @@
   }
 
   async function handleSignOut() {
+    ++authEpoch;
     try {
       await apiFetch("/api/auth/signout", { method: "POST" });
     } catch (e) {
@@ -1454,14 +1479,11 @@
     });
     document.getElementById("logoutBtn").addEventListener("click", handleSignOut);
 
-    // Check whether we already have a valid session (via the HttpOnly
-    // refresh-token cookie) before showing the sign-in screen.
-    try {
-      await apiFetch("/api/auth/me");
-      await startApp();
-    } catch (e) {
-      showAuthScreen();
-    }
+    // Try loading the list right away \u2014 it doubles as our "am I already
+    // signed in?" check via the HttpOnly session cookie, without a separate
+    // /api/auth/me round trip first (which used to double up the token
+    // refresh and could race with a manual sign-in).
+    await startApp(++authEpoch);
 
     document.getElementById("search").addEventListener("input", (e) => {
       searchTerm = e.target.value;
