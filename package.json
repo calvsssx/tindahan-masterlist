@@ -1,0 +1,12 @@
+{
+  "name": "tindahan-master-list",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Tindahan master list \u2014 static frontend + Vercel Serverless Functions backend for Supabase (auth + data), so the Supabase key never reaches the browser",
+  "scripts": {
+    "start": "node local-server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Tindahan Master List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#22271f;
+    --ink-soft:#565f52;
+    --paper:#eef2e7;
+    --paper-raised:#ffffff;
+    --line:#d8ddcd;
+    --teal:#1e4640;
+    --teal-deep:#122b27;
+    --marigold:#e2a93b;
+    --marigold-deep:#c98f22;
+    --brick:#b33f32;
+    --brick-deep:#8f2f26;
+    --shadow: 0 1px 2px rgba(18,43,39,0.06), 0 6px 16px rgba(18,43,39,0.07);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--marigold);color:var(--teal-deep);}
+
+  /* ---------- Header ---------- */
+  header.top{
+    background:
+      radial-gradient(120% 180% at 100% 0%, rgba(226,169,59,0.18), transparent 55%),
+      var(--teal);
+    color:#f4f7f0;
+    padding:22px 18px 20px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:-1px;
+    height:10px;
+    background:
+      linear-gradient(135deg, var(--marigold) 25%, transparent 25%) 0 0/16px 16px,
+      linear-gradient(225deg, var(--marigold) 25%, transparent 25%) 0 0/16px 16px;
+    opacity:0.9;
+  }
+  .top-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    max-width:820px;
+    margin:0 auto;
+  }
+  .brand h1{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:26px;
+    line-height:1.1;
+    margin:0 0 4px;
+    letter-spacing:0.2px;
+  }
+  .brand p{
+    margin:0;
+    font-size:12.5px;
+    color:#cfe0d3;
+    font-weight:500;
+  }
+  .brand p span{color:var(--marigold);font-weight:700;}
+  .icon-btn{
+    background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.18);
+    color:#f4f7f0;
+    border-radius:10px;
+    width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:background .15s ease;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.2);}
+  .icon-btn svg{width:18px;height:18px;}
+
+  /* ---------- Search & filter (sticky) ---------- */
+  .controls{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--paper);
+    padding:12px 18px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  .controls-inner{max-width:820px;margin:0 auto;}
+  .search-wrap{
+    position:relative;
+    margin-bottom:10px;
+  }
+  .search-wrap svg{
+    position:absolute; left:13px; top:50%; transform:translateY(-50%);
+    width:17px;height:17px; color:var(--ink-soft);
+    pointer-events:none;
+  }
+  #search{
+    width:100%;
+    padding:11px 14px 11px 38px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:var(--paper-raised);
+    font-size:15px;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  #search:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(30,70,64,0.12);}
+  #search::placeholder{color:#9aa392;}
+
+  .az-scroll{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    scrollbar-width:none;
+  }
+  .az-scroll::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    border:1.5px solid var(--line);
+    background:var(--paper-raised);
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:13px;
+    padding:6px 10px;
+    border-radius:9px;
+    cursor:pointer;
+    min-width:32px;
+    text-align:center;
+    transition:all .12s ease;
+  }
+  .chip:hover{border-color:var(--teal);}
+  .chip.active{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:#fff;
+  }
+  .chip.all{font-family:'Inter',sans-serif;}
+
+  .result-line{
+    max-width:820px;margin:8px auto 0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .result-line button.reset-link{
+    background:none;border:none;color:var(--brick);
+    font-size:12.5px; font-weight:600; cursor:pointer; padding:0;
+    text-decoration:underline; text-underline-offset:2px;
+  }
+
+  /* ---------- List ---------- */
+  main{
+    max-width:820px;
+    margin:0 auto;
+    padding:14px 18px 100px;
+  }
+  .letter-heading{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--teal);
+    background:var(--paper);
+    padding:14px 2px 6px;
+    position:sticky;
+    top:96px;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .letter-heading::before{
+    content:"";
+    width:20px;height:20px;
+    border-radius:6px;
+    background:var(--marigold);
+    flex-shrink:0;
+  }
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 12px 12px 14px;
+    margin-bottom:9px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:var(--shadow);
+    flex-wrap:wrap;
+  }
+  .card-main{flex:1;min-width:0;}
+  .card-footer{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-shrink:0;
+  }
+  @media (max-width:480px){
+    .card{align-items:stretch;}
+    .card-main{flex-basis:100%;}
+    .card-footer{
+      flex-basis:100%;
+      justify-content:space-between;
+      padding-top:10px;
+      margin-top:2px;
+      border-top:1px dashed var(--line);
+    }
+  }
+  .card-name{
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--ink);
+    margin:0 0 4px;
+    overflow-wrap:anywhere;
+  }
+  .card-sub{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .card-sub b{color:var(--ink);font-weight:600;}
+  .price-tag{
+    position:relative;
+    flex-shrink:0;
+    background:var(--marigold);
+    color:var(--teal-deep);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:13.5px;
+    padding:7px 12px 7px 16px;
+    border-radius:3px 8px 8px 3px;
+    min-width:64px;
+    text-align:center;
+    line-height:1.15;
+  }
+  .price-tag .lbl{
+    display:block;
+    font-size:8.5px;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    color:var(--teal-deep);
+    opacity:0.65;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+  }
+  .price-tag::before{
+    content:"";
+    position:absolute;
+    left:6px; top:50%;
+    transform:translateY(-50%);
+    width:5px;height:5px;
+    border-radius:50%;
+    background:var(--paper-raised);
+  }
+  .price-tag.empty{
+    background:var(--paper);
+    color:var(--ink-soft);
+    opacity:0.7;
+  }
+  .price-tag.empty::before{background:var(--paper-raised);}
+  .card-actions{
+    display:flex;
+    flex-direction:row;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .mini-btn{
+    width:44px;height:44px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    color:var(--ink-soft);
+    transition:transform .1s ease, background .12s ease, border-color .12s ease, color .12s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mini-btn svg{width:19px;height:19px;}
+  .mini-btn:active{transform:scale(0.93);}
+  .mini-btn.edit:hover{border-color:var(--teal);color:var(--teal);background:#e6efe9;}
+  .mini-btn.del:hover{border-color:var(--brick);color:var(--brick);background:#f6e7e4;}
+  .mini-btn.edit:active{background:#e6efe9;border-color:var(--teal);color:var(--teal);}
+  .mini-btn.del:active{background:#f6e7e4;border-color:var(--brick);color:var(--brick);}
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+  }
+  .empty-state svg{width:46px;height:46px;color:var(--marigold-deep);margin-bottom:12px;}
+  .empty-state h3{font-family:'Baloo 2',sans-serif;color:var(--teal);margin:0 0 6px;font-size:18px;}
+  .empty-state p{margin:0;font-size:13.5px;}
+
+  /* ---------- FAB ---------- */
+  .fab{
+    position:fixed;
+    right:20px; bottom:20px;
+    width:56px;height:56px;
+    border-radius:50%;
+    background:var(--marigold);
+    color:var(--teal-deep);
+    border:none;
+    box-shadow:0 6px 18px rgba(201,143,34,0.45), 0 2px 6px rgba(0,0,0,0.15);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    z-index:30;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .fab:hover{background:var(--marigold-deep);transform:translateY(-1px);}
+  .fab:active{transform:translateY(0px) scale(0.96);}
+  .fab svg{width:24px;height:24px;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(18,26,22,0.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:100;
+    padding:0;
+  }
+  .overlay.show{display:flex;}
+  .sheet{
+    background:var(--paper);
+    width:100%;
+    max-width:520px;
+    border-radius:20px 20px 0 0;
+    padding:18px 20px calc(20px + env(safe-area-inset-bottom));
+    max-height:92vh;
+    overflow-y:auto;
+    animation:slideup .18s ease;
+  }
+  @media (min-width:640px){
+    .overlay{align-items:center;}
+    .sheet{border-radius:18px;max-height:88vh;}
+  }
+  @keyframes slideup{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-handle{
+    width:38px;height:4px;background:var(--line);border-radius:4px;
+    margin:0 auto 14px;
+  }
+  @media (min-width:640px){.sheet-handle{display:none;}}
+  .sheet h2{
+    font-family:'Baloo 2',sans-serif;
+    font-size:19px;
+    color:var(--teal-deep);
+    margin:0 0 14px;
+  }
+  .field{margin-bottom:13px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    margin-bottom:5px;
+  }
+  .field input, .field select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:var(--paper-raised);
+    font-size:15px;
+    font-family:inherit;
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(30,70,64,0.12);
+  }
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .field-hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+  .sheet-actions{
+    display:flex;gap:10px;margin-top:6px;
+  }
+  .btn{
+    flex:1;
+    padding:13px;
+    border-radius:11px;
+    border:none;
+    font-size:14.5px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn.primary{background:var(--teal);color:#fff;}
+  .btn.primary:hover{background:var(--teal-deep);}
+  .btn.ghost{background:var(--paper-raised);color:var(--ink);border:1.5px solid var(--line);}
+  .btn.ghost:hover{border-color:#b8c0aa;}
+  .btn.danger{background:var(--brick);color:#fff;}
+  .btn.danger:hover{background:var(--brick-deep);}
+
+  .confirm-body p{font-size:14px;color:var(--ink-soft);line-height:1.5;}
+  .confirm-body b{color:var(--ink);}
+
+  /* ---------- Card click affordance ---------- */
+  .card{cursor:pointer;}
+  .card:hover{border-color:#c3cdb2;}
+  .card:active{transform:scale(0.995);}
+
+  /* ---------- Detail sheet ---------- */
+  .detail-cat{
+    display:inline-block;
+    background:var(--marigold);
+    color:var(--teal-deep);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700;
+    font-size:11px;
+    padding:3px 8px;
+    border-radius:6px;
+    letter-spacing:0.4px;
+  }
+  #detailName{
+    font-family:'Baloo 2',sans-serif;
+    font-size:19px;
+    color:var(--teal-deep);
+    margin:0;
+    line-height:1.25;
+  }
+  .detail-prices{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin:16px 0 6px;
+  }
+  .detail-price-box{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .detail-price-box .lbl{
+    display:block;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--ink-soft);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .detail-price-box .val{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .detail-price-box.retail{background:var(--marigold);border-color:var(--marigold-deep);}
+  .detail-price-box.retail .lbl,.detail-price-box.retail .val{color:var(--teal-deep);}
+
+  .history-section{margin-top:18px;}
+  .history-section h3{
+    font-family:'Baloo 2',sans-serif;
+    font-size:14.5px;
+    color:var(--teal);
+    margin:0 0 10px;
+  }
+  .history-empty{
+    font-size:13px;
+    color:var(--ink-soft);
+    background:var(--paper-raised);
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:14px;
+    text-align:center;
+  }
+  .history-list{
+    position:relative;
+    padding-left:18px;
+  }
+  .history-list::before{
+    content:"";
+    position:absolute;
+    left:5px; top:6px; bottom:6px;
+    width:2px;
+    background:var(--line);
+  }
+  .history-item{
+    position:relative;
+    padding-bottom:16px;
+  }
+  .history-item:last-child{padding-bottom:0;}
+  .history-item::before{
+    content:"";
+    position:absolute;
+    left:-18px; top:3px;
+    width:11px;height:11px;
+    border-radius:50%;
+    background:var(--paper-raised);
+    border:2.5px solid var(--teal);
+  }
+  .history-item.latest::before{
+    background:var(--marigold);
+    border-color:var(--marigold-deep);
+  }
+  .history-date{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+    margin-bottom:5px;
+  }
+  .history-date .badge{
+    display:inline-block;
+    background:#e6efe9;
+    color:var(--teal-deep);
+    font-size:9.5px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:5px;
+    margin-left:6px;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .history-prices{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink);
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:8px 10px;
+  }
+  .history-prices .hp{display:flex;align-items:center;gap:4px;}
+  .history-prices .hp .k{color:var(--ink-soft);font-family:'Inter',sans-serif;font-weight:600;font-size:11px;}
+  .history-prices .delta{
+    display:inline-flex;
+    align-items:center;
+    gap:1px;
+    font-size:10.5px;
+    font-weight:700;
+    padding:1px 5px;
+    border-radius:5px;
+  }
+  .history-prices .delta.up{background:#f6e7e4;color:var(--brick-deep);}
+  .history-prices .delta.down{background:#e2f0e2;color:#2e7d4f;}
+  .history-prices .delta svg{width:9px;height:9px;}
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:22px;
+    transform:translateX(-50%) translateY(10px);
+    background:var(--teal-deep);
+    color:#f4f7f0;
+    padding:11px 18px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:500;
+    box-shadow:0 6px 18px rgba(0,0,0,0.25);
+    z-index:200;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (min-width:640px){
+    .card{padding:14px 16px;}
+    .letter-heading{top:100px;}
+  }
+
+  /* ---------- Auth screen ---------- */
+  .auth-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(120% 180% at 100% 0%, rgba(226,169,59,0.12), transparent 55%),
+      var(--paper);
+  }
+  .auth-card{
+    width:100%;
+    max-width:380px;
+    background:var(--paper-raised);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:28px 24px;
+  }
+  .auth-card h1{
+    margin:0 0 6px;
+    font-family:'Baloo 2',sans-serif;
+    font-size:22px;
+    color:var(--teal-deep);
+  }
+  .auth-sub{
+    margin:0 0 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .auth-actions{
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
+  .auth-actions .btn{flex:1;}
+  .auth-error{
+    color:var(--brick-deep);
+    font-size:13px;
+    margin:2px 0 10px;
+  }
+  .auth-hint{
+    margin:16px 0 0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  .link-btn{
+    background:none;
+    border:none;
+    padding:0;
+    color:var(--teal);
+    font-weight:600;
+    font-size:inherit;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .link-btn:hover{color:var(--teal-deep);}
+</style>
+</head>
+<body>
+
+<!-- Auth screen (shown until logged in) -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <h1>Tindahan Master List</h1>
+    <p class="auth-sub">Sign in to view and edit the shared inventory list.</p>
+    <form id="authForm">
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input type="email" id="authEmail" required autocomplete="username" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="authPassword">Password</label>
+        <input type="password" id="authPassword" required autocomplete="current-password" placeholder="Your password">
+      </div>
+      <p class="auth-error" id="authError" style="display:none;"></p>
+      <button type="submit" class="btn primary" style="width:100%;" id="signInBtn">Sign in</button>
+    </form>
+    <p class="auth-hint">
+      New here? <button type="button" class="link-btn" id="openSignupBtn">Create an account</button>
+    </p>
+  </div>
+</div>
+
+<!-- Create Account Sheet -->
+<div class="overlay" id="signupOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Create account</h2>
+    <form id="signupForm">
+      <div class="field">
+        <label for="suName">Name</label>
+        <input type="text" id="suName" required autocomplete="name" placeholder="e.g. Anthony">
+      </div>
+      <div class="field">
+        <label for="suEmail">Email</label>
+        <input type="email" id="suEmail" required autocomplete="username" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="suPassword">Password</label>
+        <input type="password" id="suPassword" required autocomplete="new-password" minlength="6" placeholder="At least 6 characters">
+      </div>
+      <p class="auth-error" id="signupError" style="display:none;"></p>
+      <div class="sheet-actions" style="margin-top:16px;">
+        <button type="button" class="btn ghost" id="signupCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary" id="signupSubmitBtn">Create account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+
+<header class="top">
+  <div class="top-row">
+    <div class="brand">
+      <h1>Tindahan Master List</h1>
+      <p><span id="itemCountHeader">0</span> items · A to Z inventory</p>
+    </div>
+    <button class="icon-btn" id="logoutBtn" title="Log out" aria-label="Log out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    </button>
+    <button class="icon-btn" id="resetBtn" title="Reset to original list" aria-label="Reset to original list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="search" placeholder="Search an item…" autocomplete="off">
+    </div>
+    <div class="az-scroll" id="azScroll"></div>
+    <div class="result-line">
+      <span id="resultCount"></span>
+      <button class="reset-link" id="clearFiltersBtn" style="display:none;">Clear filters</button>
+    </div>
+  </div>
+</div>
+
+<main id="list"></main>
+
+<button class="fab" id="addFab" aria-label="Add item">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+</div><!-- /appRoot -->
+
+<!-- Item Detail / Price History Sheet -->
+<div class="overlay" id="detailOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="detail-head">
+      <div>
+        <span class="detail-cat" id="detailCategory">A</span>
+        <h2 id="detailName" style="margin-top:8px;">Item name</h2>
+      </div>
+    </div>
+    <div class="detail-prices" id="detailPrices"></div>
+    <div class="history-section">
+      <h3>Price history</h3>
+      <div id="historyList"></div>
+    </div>
+    <div class="sheet-actions" style="margin-top:18px;">
+      <button type="button" class="btn ghost" id="detailEditBtn">Edit item</button>
+      <button type="button" class="btn ghost" id="detailCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Sheet -->
+<div class="overlay" id="editOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="sheetTitle">Add item</h2>
+    <form id="itemForm">
+      <div class="field">
+        <label for="fName">Item name</label>
+        <input type="text" id="fName" required placeholder="e.g. Bear Brand Powdered Milk 33g">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fCategory">Letter tab</label>
+          <select id="fCategory"></select>
+        </div>
+        <div class="field">
+          <label for="fUnit">Unit price</label>
+          <input type="number" id="fUnit" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fWholesale">Wholesale price</label>
+          <input type="number" id="fWholesale" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label for="fRetail">Retail price</label>
+          <input type="number" id="fRetail" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field-hint">Leave a price blank if it doesn't apply to this item.</div>
+      <div class="sheet-actions" style="margin-top:16px;">
+        <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn primary" id="saveBtn">Save item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirm Sheet -->
+<div class="overlay" id="deleteOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Delete item?</h2>
+    <div class="confirm-body">
+      <p>Remove <b id="deleteItemName"></b> from the master list? This can't be undone.</p>
+    </div>
+    <div class="sheet-actions" style="margin-top:10px;">
+      <button type="button" class="btn ghost" id="cancelDeleteBtn">Cancel</button>
+      <button type="button" class="btn danger" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Confirm Sheet -->
+<div class="overlay" id="resetOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Reset to original list?</h2>
+    <div class="confirm-body">
+      <p>This throws away every edit, addition, and deletion you've made, and restores the original spreadsheet list. This can't be undone.</p>
+    </div>
+    <div class="sheet-actions" style="margin-top:10px;">
+      <button type="button" class="btn ghost" id="cancelResetBtn">Cancel</button>
+      <button type="button" class="btn danger" id="confirmResetBtn">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").concat(["#"]);
+  const POLL_INTERVAL_MS = 8000;
+
+  let items = [];
+  let activeLetter = "ALL";
+  let searchTerm = "";
+  let editingId = null;   // id currently being edited, null = adding new
+  let pendingDeleteId = null;
+
+  // ---------- Backend API helpers ----------
+  // The browser never talks to Supabase directly and never sees any key.
+  // Every call goes to our own /api/* serverless functions, which hold the
+  // Supabase URL/anon key as server-side environment variables only.
+  class AuthRequiredError extends Error {}
+
+  async function apiFetch(path, options = {}) {
+    const res = await fetch(path, {
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+    if (res.status === 401) {
+      throw new AuthRequiredError("Not signed in");
+    }
+    let body = null;
+    try {
+      body = await res.json();
+    } catch (e) {
+      // no body
+    }
+    if (!res.ok) {
+      throw new Error((body && body.error) || `Request failed (${res.status})`);
+    }
+    return body;
+  }
+
+  async function fetchItemsFromServer() {
+    const body = await apiFetch("/api/items");
+    const list = body.items || [];
+    list.forEach(migrateHistory);
+    return list;
+  }
+
+  async function upsertItemRemote(item) {
+    try {
+      await apiFetch("/api/items", { method: "POST", body: JSON.stringify(item) });
+    } catch (e) {
+      if (e instanceof AuthRequiredError) { showAuthScreen(); return; }
+      console.error("Save failed", e);
+      showToast("Couldn't save that change \u2014 check your connection");
+    }
+  }
+
+  async function deleteItemRemote(id) {
+    try {
+      await apiFetch(`/api/items?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      if (e instanceof AuthRequiredError) { showAuthScreen(); return; }
+      console.error("Delete failed", e);
+      showToast("Couldn't delete that item \u2014 check your connection");
+    }
+  }
+
+  async function resetOnServer() {
+    try {
+      const body = await apiFetch("/api/items/reset", { method: "POST" });
+      const list = body.items || [];
+      list.forEach(migrateHistory);
+      return list;
+    } catch (e) {
+      if (e instanceof AuthRequiredError) { showAuthScreen(); return null; }
+      console.error("Reset failed", e);
+      showToast("Reset failed \u2014 check your connection");
+      return null;
+    }
+  }
+
+  // Ensure every item has a priceHistory array. Items coming from the
+  // original spreadsheet (or older saved data) get a single "original
+  // list" entry with no date, since we don't know when those prices
+  // were actually set.
+  function migrateHistory(it) {
+    if (!Array.isArray(it.priceHistory) || it.priceHistory.length === 0) {
+      it.priceHistory = [{
+        date: null,
+        unitPrice: it.unitPrice,
+        wholesalePrice: it.wholesalePrice,
+        retailPrice: it.retailPrice,
+      }];
+    }
+    return it;
+  }
+
+  // ---------- Polling sync ----------
+  // No direct-to-browser realtime anymore (that would require shipping a
+  // key for the WebSocket handshake). Instead, poll our own API every few
+  // seconds and only apply/re-render if something actually changed and no
+  // overlay is currently open (so we don't yank the list out from under
+  // someone mid-edit).
+  let pollTimer = null;
+  function isAnyOverlayOpen() {
+    return !!document.querySelector(".overlay.show");
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(async () => {
+      if (isAnyOverlayOpen()) return;
+      try {
+        const fresh = await fetchItemsFromServer();
+        if (JSON.stringify(fresh) !== JSON.stringify(items)) {
+          items = fresh;
+          render();
+        }
+      } catch (e) {
+        if (e instanceof AuthRequiredError) {
+          stopPolling();
+          showAuthScreen();
+        }
+        // Silently ignore transient network errors on poll.
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  function nextId() {
+    return items.reduce((max, it) => Math.max(max, it.id), 0) + 1;
+  }
+
+  function letterOf(name) {
+    const c = (name || "").trim().charAt(0).toUpperCase();
+    return /[A-Z]/.test(c) ? c : "#";
+  }
+
+  function pricesEqual(a, b) {
+    const norm = (v) => (v === undefined || v === "" ? null : v);
+    return norm(a.unitPrice) === norm(b.unitPrice) &&
+           norm(a.wholesalePrice) === norm(b.wholesalePrice) &&
+           norm(a.retailPrice) === norm(b.retailPrice);
+  }
+
+  // ---------- Formatting ----------
+  function fmtPrice(v) {
+    if (v === null || v === undefined || v === "" || isNaN(v)) return null;
+    return "₱" + Number(v).toFixed(2).replace(/\.00$/, ".00");
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  // ---------- Filtering ----------
+  function getFiltered() {
+    let list = items.slice();
+    if (activeLetter !== "ALL") {
+      list = list.filter((it) => it.category === activeLetter);
+    }
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      list = list.filter((it) => it.name.toLowerCase().includes(q));
+    }
+    list.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    return list;
+  }
+
+  // ---------- Rendering ----------
+  function renderAZChips() {
+    const wrap = document.getElementById("azScroll");
+    const counts = {};
+    items.forEach((it) => { counts[it.category] = (counts[it.category] || 0) + 1; });
+
+    let html = `<button class="chip all ${activeLetter === "ALL" ? "active" : ""}" data-letter="ALL">All</button>`;
+    LETTERS.forEach((L) => {
+      if (!counts[L]) return;
+      html += `<button class="chip ${activeLetter === L ? "active" : ""}" data-letter="${L}">${L}</button>`;
+    });
+    wrap.innerHTML = html;
+
+    wrap.querySelectorAll(".chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeLetter = btn.dataset.letter;
+        searchTerm = document.getElementById("search").value = searchTerm; // keep search as-is
+        render();
+      });
+    });
+  }
+
+  function priceTagHtml(label, value) {
+    const f = fmtPrice(value);
+    if (f === null) {
+      return `<div class="price-tag empty"><span class="lbl">${label}</span>—</div>`;
+    }
+    return `<div class="price-tag"><span class="lbl">${label}</span>${f}</div>`;
+  }
+
+  function renderList() {
+    const container = document.getElementById("list");
+    const filtered = getFiltered();
+
+    document.getElementById("itemCountHeader").textContent = items.length;
+
+    const clearBtn = document.getElementById("clearFiltersBtn");
+    const hasFilters = activeLetter !== "ALL" || searchTerm.trim() !== "";
+    clearBtn.style.display = hasFilters ? "inline" : "none";
+
+    const countLabel = document.getElementById("resultCount");
+    countLabel.textContent = hasFilters
+      ? `${filtered.length} of ${items.length} items`
+      : `${items.length} item${items.length === 1 ? "" : "s"} total`;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <h3>${items.length === 0 ? "Your list is empty" : "No items match"}</h3>
+          <p>${items.length === 0 ? "Tap the + button to add your first item." : "Try a different search term or letter."}</p>
+        </div>`;
+      return;
+    }
+
+    // Group by letter only when viewing "All" with no active search collapsing groups oddly.
+    let html = "";
+    let lastLetter = null;
+    const groupHeadings = activeLetter === "ALL";
+
+    filtered.forEach((it) => {
+      const L = it.category;
+      if (groupHeadings && L !== lastLetter) {
+        html += `<div class="letter-heading">${L}</div>`;
+        lastLetter = L;
+      }
+      html += `
+        <div class="card" data-id="${it.id}">
+          <div class="card-main">
+            <p class="card-name">${escapeHtml(it.name)}</p>
+            <div class="card-sub">
+              <span>Unit: <b>${fmtPrice(it.unitPrice) || "—"}</b></span>
+              <span>Wholesale: <b>${fmtPrice(it.wholesalePrice) || "—"}</b></span>
+            </div>
+          </div>
+          <div class="card-footer">
+            ${priceTagHtml("Retail", it.retailPrice)}
+            <div class="card-actions">
+              <button class="mini-btn edit" data-action="edit" data-id="${it.id}" aria-label="Edit ${escapeHtml(it.name)}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="mini-btn del" data-action="delete" data-id="${it.id}" aria-label="Delete ${escapeHtml(it.name)}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+
+    container.querySelectorAll('[data-action="edit"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openEditSheet(Number(btn.dataset.id));
+      });
+    });
+    container.querySelectorAll('[data-action="delete"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openDeleteConfirm(Number(btn.dataset.id));
+      });
+    });
+    container.querySelectorAll(".card").forEach((card) => {
+      card.addEventListener("click", () => openDetailSheet(Number(card.dataset.id)));
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("role", "button");
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openDetailSheet(Number(card.dataset.id));
+        }
+      });
+    });
+  }
+
+  function render() {
+    renderAZChips();
+    renderList();
+  }
+
+  // ---------- Item detail / price history ----------
+  function formatHistoryDate(iso) {
+    if (!iso) return "Original list";
+    const d = new Date(iso);
+    const datePart = d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    const timePart = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    return `${datePart} · ${timePart}`;
+  }
+
+  function deltaHtml(curr, prev) {
+    if (prev === null || prev === undefined || curr === null || curr === undefined) return "";
+    const diff = curr - prev;
+    if (Math.abs(diff) < 0.005) return "";
+    const up = diff > 0;
+    const arrow = up
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+    return `<span class="delta ${up ? "up" : "down"}">${arrow}${fmtPrice(Math.abs(diff))}</span>`;
+  }
+
+  function historyPriceRow(entry, prevEntry) {
+    const parts = [
+      ["Unit", entry.unitPrice, prevEntry ? prevEntry.unitPrice : null],
+      ["Wholesale", entry.wholesalePrice, prevEntry ? prevEntry.wholesalePrice : null],
+      ["Retail", entry.retailPrice, prevEntry ? prevEntry.retailPrice : null],
+    ];
+    return parts.map(([label, val, prevVal]) => {
+      const f = fmtPrice(val);
+      return `<span class="hp"><span class="k">${label}</span> ${f || "—"} ${deltaHtml(val, prevVal)}</span>`;
+    }).join("");
+  }
+
+  function openDetailSheet(id) {
+    const it = items.find((x) => x.id === id);
+    if (!it) return;
+    migrateHistory(it);
+
+    document.getElementById("detailCategory").textContent = it.category;
+    document.getElementById("detailName").textContent = it.name;
+    document.getElementById("detailPrices").innerHTML = `
+      <div class="detail-price-box"><span class="lbl">Unit</span><span class="val">${fmtPrice(it.unitPrice) || "—"}</span></div>
+      <div class="detail-price-box"><span class="lbl">Wholesale</span><span class="val">${fmtPrice(it.wholesalePrice) || "—"}</span></div>
+      <div class="detail-price-box retail"><span class="lbl">Retail</span><span class="val">${fmtPrice(it.retailPrice) || "—"}</span></div>
+    `;
+
+    const historyEl = document.getElementById("historyList");
+    const hist = it.priceHistory.slice().reverse(); // latest first
+    if (hist.length <= 1) {
+      historyEl.innerHTML = `<div class="history-empty">No price changes recorded yet. Whenever you edit this item's prices, the change will show up here.</div>`;
+    } else {
+      let html = '<div class="history-list">';
+      hist.forEach((entry, idx) => {
+        const isLatest = idx === 0;
+        const prevEntry = hist[idx + 1] || null; // chronologically earlier entry
+        html += `
+          <div class="history-item ${isLatest ? "latest" : ""}">
+            <div class="history-date">${formatHistoryDate(entry.date)}${isLatest ? '<span class="badge">Current</span>' : ""}</div>
+            <div class="history-prices">${historyPriceRow(entry, prevEntry)}</div>
+          </div>`;
+      });
+      html += "</div>";
+      historyEl.innerHTML = html;
+    }
+
+    document.getElementById("detailEditBtn").onclick = () => {
+      closeOverlay("detailOverlay");
+      openEditSheet(id);
+    };
+    showOverlay("detailOverlay");
+  }
+
+  // ---------- Add / Edit sheet ----------
+  function populateCategorySelect() {
+    const sel = document.getElementById("fCategory");
+    sel.innerHTML = LETTERS.map((L) => `<option value="${L}">${L === "#" ? "# (starts with a number)" : L}</option>`).join("");
+  }
+
+  function openAddSheet() {
+    editingId = null;
+    document.getElementById("sheetTitle").textContent = "Add item";
+    document.getElementById("saveBtn").textContent = "Save item";
+    document.getElementById("itemForm").reset();
+    document.getElementById("fCategory").value = "A";
+    showOverlay("editOverlay");
+    setTimeout(() => document.getElementById("fName").focus(), 50);
+  }
+
+  function openEditSheet(id) {
+    const it = items.find((x) => x.id === id);
+    if (!it) return;
+    editingId = id;
+    document.getElementById("sheetTitle").textContent = "Edit item";
+    document.getElementById("saveBtn").textContent = "Save changes";
+    document.getElementById("fName").value = it.name;
+    document.getElementById("fCategory").value = it.category;
+    document.getElementById("fUnit").value = it.unitPrice ?? "";
+    document.getElementById("fWholesale").value = it.wholesalePrice ?? "";
+    document.getElementById("fRetail").value = it.retailPrice ?? "";
+    showOverlay("editOverlay");
+    setTimeout(() => document.getElementById("fName").focus(), 50);
+  }
+
+  function handleFormSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById("fName").value.trim();
+    if (!name) return;
+    const category = document.getElementById("fCategory").value || letterOf(name);
+    const unitPrice = parseNumOrNull(document.getElementById("fUnit").value);
+    const wholesalePrice = parseNumOrNull(document.getElementById("fWholesale").value);
+    const retailPrice = parseNumOrNull(document.getElementById("fRetail").value);
+    const newPrices = { unitPrice, wholesalePrice, retailPrice };
+
+    let savedItem = null;
+    if (editingId === null) {
+      savedItem = {
+        id: nextId(),
+        name,
+        category,
+        unitPrice,
+        wholesalePrice,
+        retailPrice,
+        priceHistory: [{ date: new Date().toISOString(), ...newPrices }],
+      };
+      items.push(savedItem);
+      showToast(`Added "${name}"`);
+    } else {
+      const it = items.find((x) => x.id === editingId);
+      if (it) {
+        migrateHistory(it);
+        const last = it.priceHistory[it.priceHistory.length - 1];
+        if (!pricesEqual(last, newPrices)) {
+          it.priceHistory.push({ date: new Date().toISOString(), ...newPrices });
+        }
+        it.name = name;
+        it.category = category;
+        it.unitPrice = unitPrice;
+        it.wholesalePrice = wholesalePrice;
+        it.retailPrice = retailPrice;
+        savedItem = it;
+        showToast(`Saved "${name}"`);
+      }
+    }
+    if (savedItem) upsertItemRemote(savedItem);
+    closeOverlay("editOverlay");
+    render();
+  }
+
+  function parseNumOrNull(v) {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = parseFloat(v);
+    return isNaN(n) ? null : Math.round(n * 100) / 100;
+  }
+
+  // ---------- Delete ----------
+  function openDeleteConfirm(id) {
+    const it = items.find((x) => x.id === id);
+    if (!it) return;
+    pendingDeleteId = id;
+    document.getElementById("deleteItemName").textContent = it.name;
+    showOverlay("deleteOverlay");
+  }
+
+  function confirmDelete() {
+    if (pendingDeleteId === null) return;
+    const it = items.find((x) => x.id === pendingDeleteId);
+    const deletedId = pendingDeleteId;
+    items = items.filter((x) => x.id !== pendingDeleteId);
+    deleteItemRemote(deletedId);
+    closeOverlay("deleteOverlay");
+    pendingDeleteId = null;
+    render();
+    if (it) showToast(`Deleted "${it.name}"`);
+  }
+
+  // ---------- Reset ----------
+  function openResetConfirm() {
+    showOverlay("resetOverlay");
+  }
+
+  async function confirmReset() {
+    const btn = document.getElementById("confirmResetBtn");
+    btn.disabled = true;
+    const fresh = await resetOnServer();
+    btn.disabled = false;
+    if (!fresh) return; // error toast already shown
+    items = fresh;
+    closeOverlay("resetOverlay");
+    activeLetter = "ALL";
+    searchTerm = "";
+    document.getElementById("search").value = "";
+    render();
+    showToast("Restored the original list");
+  }
+
+  // ---------- Overlay helpers ----------
+  function showOverlay(id) {
+    document.getElementById(id).classList.add("show");
+  }
+  function closeOverlay(id) {
+    document.getElementById(id).classList.remove("show");
+  }
+
+  // ---------- Toast ----------
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  // ---------- Auth ----------
+  function showAuthScreen(errorMsg) {
+    stopPolling();
+    document.getElementById("appRoot").style.display = "none";
+    document.getElementById("authScreen").style.display = "flex";
+    closeOverlay("signupOverlay");
+    const errEl = document.getElementById("authError");
+    if (errorMsg) {
+      errEl.textContent = errorMsg;
+      errEl.style.display = "block";
+    } else {
+      errEl.style.display = "none";
+    }
+  }
+
+  async function startApp() {
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("appRoot").style.display = "block";
+    try {
+      items = await fetchItemsFromServer();
+    } catch (e) {
+      if (e instanceof AuthRequiredError) { showAuthScreen(); return; }
+      showAuthScreen("Couldn't load the list \u2014 " + e.message);
+      return;
+    }
+    populateCategorySelect();
+    render();
+    startPolling();
+  }
+
+  function openSignupOverlay() {
+    document.getElementById("signupForm").reset();
+    document.getElementById("signupError").style.display = "none";
+    showOverlay("signupOverlay");
+  }
+
+  function showSignupError(msg) {
+    const errEl = document.getElementById("signupError");
+    errEl.textContent = msg;
+    errEl.style.display = "block";
+  }
+
+  async function handleSignIn(e) {
+    e.preventDefault();
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const btn = document.getElementById("signInBtn");
+    btn.disabled = true;
+    try {
+      await apiFetch("/api/auth/signin", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      await startApp();
+    } catch (e) {
+      showAuthScreen(e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function handleSignUp(e) {
+    e.preventDefault();
+    const name = document.getElementById("suName").value.trim();
+    const email = document.getElementById("suEmail").value.trim();
+    const password = document.getElementById("suPassword").value;
+
+    const btn = document.getElementById("signupSubmitBtn");
+    btn.disabled = true;
+    let result;
+    try {
+      result = await apiFetch("/api/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password }),
+      });
+    } catch (e) {
+      showSignupError(e.message);
+      btn.disabled = false;
+      return;
+    }
+    btn.disabled = false;
+
+    if (result.signedIn) {
+      closeOverlay("signupOverlay");
+      await startApp();
+      return;
+    }
+    closeOverlay("signupOverlay");
+    showAuthScreen("Account created! Check your email to confirm, then sign in below.");
+  }
+
+  async function handleSignOut() {
+    try {
+      await apiFetch("/api/auth/signout", { method: "POST" });
+    } catch (e) {
+      // ignore \u2014 clear the UI regardless
+    }
+    showAuthScreen();
+  }
+
+  // ---------- Init ----------
+  async function init() {
+    document.getElementById("authForm").addEventListener("submit", handleSignIn);
+    document.getElementById("openSignupBtn").addEventListener("click", openSignupOverlay);
+    document.getElementById("signupForm").addEventListener("submit", handleSignUp);
+    document.getElementById("signupCancelBtn").addEventListener("click", () => closeOverlay("signupOverlay"));
+    document.getElementById("signupOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "signupOverlay") closeOverlay("signupOverlay");
+    });
+    document.getElementById("logoutBtn").addEventListener("click", handleSignOut);
+
+    // Check whether we already have a valid session (via the HttpOnly
+    // refresh-token cookie) before showing the sign-in screen.
+    try {
+      await apiFetch("/api/auth/me");
+      await startApp();
+    } catch (e) {
+      showAuthScreen();
+    }
+
+    document.getElementById("search").addEventListener("input", (e) => {
+      searchTerm = e.target.value;
+      renderList();
+      updateAZActiveOnly();
+    });
+
+    document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+      activeLetter = "ALL";
+      searchTerm = "";
+      document.getElementById("search").value = "";
+      render();
+    });
+
+    document.getElementById("addFab").addEventListener("click", openAddSheet);
+    document.getElementById("itemForm").addEventListener("submit", handleFormSubmit);
+    document.getElementById("cancelBtn").addEventListener("click", () => closeOverlay("editOverlay"));
+    document.getElementById("editOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "editOverlay") closeOverlay("editOverlay");
+    });
+
+    document.getElementById("detailCloseBtn").addEventListener("click", () => closeOverlay("detailOverlay"));
+    document.getElementById("detailOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "detailOverlay") closeOverlay("detailOverlay");
+    });
+
+    document.getElementById("cancelDeleteBtn").addEventListener("click", () => closeOverlay("deleteOverlay"));
+    document.getElementById("confirmDeleteBtn").addEventListener("click", confirmDelete);
+    document.getElementById("deleteOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "deleteOverlay") closeOverlay("deleteOverlay");
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", openResetConfirm);
+    document.getElementById("cancelResetBtn").addEventListener("click", () => closeOverlay("resetOverlay"));
+    document.getElementById("confirmResetBtn").addEventListener("click", confirmReset);
+    document.getElementById("resetOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "resetOverlay") closeOverlay("resetOverlay");
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        ["editOverlay", "deleteOverlay", "resetOverlay", "detailOverlay", "signupOverlay"].forEach(closeOverlay);
+      }
+    });
+
+    render();
+  }
+
+  function updateAZActiveOnly() {
+    // re-render chip active state without rebuilding whole list scroll position
+    document.querySelectorAll(".chip").forEach((c) => {
+      c.classList.toggle("active", c.dataset.letter === activeLetter);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+
+</script>
+</body>
+</html>
