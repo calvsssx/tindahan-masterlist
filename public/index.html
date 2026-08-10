@@ -1527,6 +1527,19 @@
       if (e.key === "Escape") {
         ["editOverlay", "deleteOverlay", "resetOverlay", "detailOverlay", "signupOverlay"].forEach(closeOverlay);
       }
+      // Ctrl + N / Cmd + N → Add new item
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
+    // Don't trigger while typing in an input/textarea
+    const tag = document.activeElement?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") {
+      return;
+    }
+
+    e.preventDefault();
+
+    // Click the existing Add Item button
+    document.querySelector("addFab")?.click();
+  }
     });
 
     render();
