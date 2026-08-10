@@ -1527,18 +1527,17 @@
       if (e.key === "Escape") {
         ["editOverlay", "deleteOverlay", "resetOverlay", "detailOverlay", "signupOverlay"].forEach(closeOverlay);
       }
-      // Ctrl + N / Cmd + N → Add new item
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
-    // Don't trigger while typing in an input/textarea
+      // Ctrl + Shift + A → Add new item
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
     const tag = document.activeElement?.tagName;
+
+    // Don't trigger while typing
     if (tag === "INPUT" || tag === "TEXTAREA") {
       return;
     }
 
     e.preventDefault();
-
-    // Click the existing Add Item button
-    document.querySelector("addFab")?.click();
+    document.getElementById("addFab")?.click();
   }
     });
 
