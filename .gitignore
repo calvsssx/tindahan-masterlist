@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Local env — NEVER commit real Supabase credentials
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Vercel
+.vercel/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*

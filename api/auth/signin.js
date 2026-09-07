@@ -1,18 +1,20 @@
 const { anonClient } = require("../_lib/supabaseServer");
-const { setSessionCookie } = require("../_lib/auth");
+const { setSessionCookies } = require("../_lib/auth");
+const { applyApiHeaders, assertSameOrigin, fail } = require("../_lib/http");
 
 module.exports = async (req, res) => {
+  applyApiHeaders(res);
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
+  if (!assertSameOrigin(req, res)) return;
 
   let client;
   try {
     client = anonClient();
   } catch (e) {
-    res.status(500).json({ error: e.message });
-    return;
+    return fail(res, e);
   }
 
   const { email, password } = req.body || {};
@@ -21,12 +23,18 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { data, error } = await client.auth.signInWithPassword({ email, password });
-  if (error) {
-    res.status(401).json({ error: error.message });
-    return;
+  try {
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) {
+      // Supabase's own message here is safe and useful ("Invalid login
+      // credentials") and intentionally doesn't reveal whether the email
+      // exists.
+      res.status(401).json({ error: error.message });
+      return;
+    }
+    setSessionCookies(req, res, data.session);
+    res.status(200).json({ ok: true });
+  } catch (e) {
+    return fail(res, e);
   }
-
-  setSessionCookie(req, res, data.session);
-  res.status(200).json({ ok: true });
 };

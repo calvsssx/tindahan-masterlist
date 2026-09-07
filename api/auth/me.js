@@ -1,6 +1,9 @@
 const { requireUser } = require("../_lib/auth");
+const { applyApiHeaders } = require("../_lib/http");
 
 module.exports = async (req, res) => {
+  applyApiHeaders(res);
+
   const ctx = await requireUser(req, res);
   if (!ctx) return; // requireUser already sent a 401
 

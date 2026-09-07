@@ -112,12 +112,27 @@ function addResHelpers(res) {
   };
 }
 
+// Mirrors the security headers vercel.json applies in production, so local
+// dev behaves the same (e.g. CSP violations show up here too).
+function setSecurityHeaders(res) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), browsing-topics=()");
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+      "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; " +
+      "base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+  );
+}
+
 function serveStatic(req, res, pathname) {
   let filePath = pathname === "/" ? "/index.html" : pathname;
-  filePath = path.join(PUBLIC_DIR, filePath);
+  filePath = path.normalize(path.join(PUBLIC_DIR, filePath));
 
   // Prevent path traversal outside public/
-  if (!filePath.startsWith(PUBLIC_DIR)) {
+  if (filePath !== PUBLIC_DIR && !filePath.startsWith(PUBLIC_DIR + path.sep)) {
     res.statusCode = 403;
     res.end("Forbidden");
     return;
@@ -131,6 +146,7 @@ function serveStatic(req, res, pathname) {
     }
     const ext = path.extname(filePath);
     res.setHeader("Content-Type", MIME_TYPES[ext] || "application/octet-stream");
+    setSecurityHeaders(res);
     res.end(data);
   });
 }

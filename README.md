@@ -32,6 +32,7 @@ Create a repo on GitHub/GitLab/Bitbucket and push. `.env.local` is gitignored, s
 2. Before deploying, open **Project Settings \u2192 Environment Variables** and add:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
+   - `SIGNUP_INVITE_CODE` *(optional, recommended)* \u2014 if set, creating an account requires this exact code. Without it, anyone who finds the URL can register and edit (or reset) the shared list. Use any long, hard-to-guess string and share it only with your household.
 3. Deploy. Vercel installs `@supabase/supabase-js` automatically (it's a real dependency now, listed in `package.json`), serves `public/` as the static site, and deploys everything under `/api` as Serverless Functions.
 
 Changing an env var in Vercel's dashboard requires a redeploy to take effect.
@@ -70,10 +71,21 @@ Everyone signed in (any account) shares the same list \u2014 there's no per-user
 
 ## How auth works, briefly
 
-- Sign in/up hit `/api/auth/signin` or `/api/auth/signup`, which talk to Supabase server-side and set a single HttpOnly cookie holding a refresh token. The browser can't read this cookie's value via JavaScript.
-- Every protected `/api/*` call uses that cookie to get a fresh Supabase session server-side (via `refreshSession`), then makes the actual Supabase request using that user's own access token \u2014 so Row Level Security still applies exactly as if the user had signed in directly.
-- `/api/auth/me` is how the page checks "am I already signed in?" on load, without ever holding a Supabase token client-side.
-- Signing out just clears the cookie.
+- Sign in/up hit `/api/auth/signin` or `/api/auth/signup`, which talk to Supabase server-side and set two HttpOnly cookies \u2014 a refresh token and the current access token. Neither is readable from JavaScript.
+- Every protected `/api/*` call takes a **fast path** when the access-token cookie is still valid: it makes the Supabase request straight away using that token, so Row Level Security applies exactly as if the user had signed in directly \u2014 with no auth round-trip. Only when the access token has actually expired (~hourly) does it exchange the refresh token for a new session and re-set both cookies.
+  - This matters: Supabase rotates the refresh token on every refresh. The old code refreshed on *every* request, so the 8-second poll plus a second open tab would race and invalidate each other's token, bouncing a signed-in user back to the login screen. The fast path removes that.
+- On load, the page shows a neutral splash while it checks the session cookie \u2014 never the login form \u2014 so a signed-in user reopening the tab doesn't see a prompt they might needlessly re-submit.
+- Signing out clears both cookies.
+
+## Security notes
+
+- **`.gitignore` is real now** \u2014 `.env.local` and `node_modules/` are excluded. Never commit real Supabase credentials.
+- **If this repo was ever public with keys committed**, rotate them: Supabase dashboard \u2192 Project Settings \u2192 API \u2192 roll the `anon` key, then update `SUPABASE_ANON_KEY` in Vercel and redeploy. (This tree's git history is clean.)
+- All `/api` responses send `Cache-Control: no-store` and anti-sniff/anti-framing headers; the static site sends a strict Content-Security-Policy (`script-src 'self'`, `connect-src 'self'`), HSTS, and `X-Frame-Options: DENY` via `vercel.json`.
+- State-changing endpoints (`POST`/`DELETE`) reject requests whose `Origin` isn't this site \u2014 CSRF defense-in-depth on top of the `SameSite=Lax` cookie.
+- Internal errors are logged server-side (visible in Vercel function logs) and never sent to the browser.
+- Row Level Security policies are scoped `to authenticated`, so the anonymous role has no access to the table at all.
+- Passwords must be at least 8 characters.
 
 ## Notes
 - First load after setup seeds the table from the original spreadsheet \u2014 automatic, one-time, on whichever device loads it first.
@@ -85,12 +97,15 @@ Everyone signed in (any account) shares the same list \u2014 there's no per-user
 ```
 tindahan-master-list/
 \u251c\u2500 public/
-\u2502  \u2514\u2500 index.html            the app \u2014 talks only to /api/*, never to Supabase directly
+\u2502  \u251c\u2500 index.html            markup + styles only
+\u2502  \u2514\u2500 app.js                the app logic \u2014 talks only to /api/*, never to Supabase directly
 \u251c\u2500 api/
 \u2502  \u251c\u2500 _lib/
-\u2502  \u2502  \u251c\u2500 supabaseServer.js  server-only Supabase client (reads env vars)
+\u2502  \u2502  \u251c\u2500 supabaseServer.js  server-only Supabase clients (reads env vars)
 \u2502  \u2502  \u251c\u2500 cookies.js         cookie serialization helper
-\u2502  \u2502  \u251c\u2500 auth.js            session cookie + requireUser guard
+\u2502  \u2502  \u251c\u2500 jwt.js             decode access-token exp/claims (no network)
+\u2502  \u2502  \u251c\u2500 http.js            security headers + same-origin guard + safe errors
+\u2502  \u2502  \u251c\u2500 auth.js            session cookies + requireUser guard (fast/slow path)
 \u2502  \u2502  \u251c\u2500 itemMapping.js     row \u2194 item shape conversion + seeding
 \u2502  \u2502  \u2514\u2500 defaultItems.js    the original spreadsheet list (server-side only now)
 \u2502  \u251c\u2500 auth/
@@ -103,7 +118,7 @@ tindahan-master-list/
 \u2502     \u2514\u2500 reset.js           POST \u2014 wipe + reseed
 \u251c\u2500 local-server.js          plain-Node local dev server (no Vercel CLI needed)
 \u251c\u2500 package.json             lists @supabase/supabase-js as a real dependency
-\u251c\u2500 vercel.json              serves public/ as static output; /api auto-detected
+\u251c\u2500 vercel.json              static output + security headers (CSP, HSTS, \u2026)
 \u251c\u2500 .env.example             template \u2014 safe to commit
 \u251c\u2500 .gitignore               keeps .env.local and node_modules out of git
 \u2514\u2500 supabase-schema.sql      run once in Supabase's SQL editor
