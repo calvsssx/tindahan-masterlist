@@ -382,6 +382,11 @@
     sel.innerHTML = LETTERS.map((L) => `<option value="${L}">${L === "#" ? "# (starts with a number)" : L}</option>`).join("");
   }
 
+  function autoCategory() {
+    const name = document.getElementById("fName").value.trim();
+    if (name) document.getElementById("fCategory").value = letterOf(name);
+  }
+
   function openAddSheet() {
     editingId = null;
     document.getElementById("sheetTitle").textContent = "Add item";
@@ -689,6 +694,7 @@
 
     document.getElementById("addFab").addEventListener("click", openAddSheet);
     document.getElementById("itemForm").addEventListener("submit", handleFormSubmit);
+    document.getElementById("fName").addEventListener("input", autoCategory);
     document.getElementById("cancelBtn").addEventListener("click", () => closeOverlay("editOverlay"));
     document.getElementById("editOverlay").addEventListener("click", (e) => {
       if (e.target.id === "editOverlay") closeOverlay("editOverlay");

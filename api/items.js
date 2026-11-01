@@ -26,9 +26,23 @@ module.exports = async (req, res) => {
         return;
       }
 
-      const { data, error } = await client.from("items").select("*").order("id");
-      if (error) return fail(res, error);
-      res.status(200).json({ items: data.map(rowToItem) });
+      // Supabase caps queries at 1000 rows by default. Fetch in pages
+      // so stores with 1000+ items don't silently lose the tail.
+      let allRows = [];
+      const PAGE = 1000;
+      let from = 0;
+      while (true) {
+        const { data, error } = await client
+          .from("items")
+          .select("*")
+          .order("id")
+          .range(from, from + PAGE - 1);
+        if (error) return fail(res, error);
+        allRows = allRows.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      res.status(200).json({ items: allRows.map(rowToItem) });
       return;
     }
 
